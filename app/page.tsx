@@ -62,7 +62,9 @@ export default function Dashboard() {
           round_type: r.round_type,
           source_url: r.source_url,
           roles: c.roles || [],
-          card: c.outreach_cards?.[0] || null,
+          card: Array.isArray(c.outreach_cards)
+            ? c.outreach_cards[0] || null
+            : c.outreach_cards || null,
         };
       })
       .filter(Boolean) as CompanyData[];
