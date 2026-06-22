@@ -10,7 +10,6 @@ type Geo = "all" | "india" | "global";
 
 export default function Dashboard() {
   const supabase = createBrowserClient();
-  const [authed, setAuthed] = useState<boolean | null>(null);
   const [companies, setCompanies] = useState<CompanyData[]>([]);
   const [loading, setLoading] = useState(true);
   const [geo, setGeo] = useState<Geo>("all");
@@ -18,19 +17,8 @@ export default function Dashboard() {
   const [week, setWeek] = useState<string>("");
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) {
-        window.location.href = "/login";
-      } else {
-        setAuthed(true);
-      }
-    });
-  }, []);
-
-  useEffect(() => {
-    if (!authed) return;
     load();
-  }, [authed]);
+  }, []);
 
   async function load() {
     setLoading(true);
@@ -87,18 +75,11 @@ export default function Dashboard() {
     setLoading(false);
   }
 
-  async function signOut() {
-    await supabase.auth.signOut();
-    window.location.href = "/login";
-  }
-
   const filtered = companies.filter((c) => {
     if (geo !== "all" && c.geo !== geo) return false;
     if (onlyPM && !c.roles.some((r) => r.is_pm_relevant)) return false;
     return true;
   });
-
-  if (authed === null) return <div className="state">checking session…</div>;
 
   return (
     <>
@@ -108,7 +89,6 @@ export default function Dashboard() {
             funded<span className="dot">.</span>
             <span className="sub">weekly intel</span>
           </div>
-          <button className="signout" onClick={signOut}>sign out</button>
         </div>
       </div>
 

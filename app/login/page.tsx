@@ -5,17 +5,21 @@ import { createBrowserClient } from "@/lib/supabase";
 
 export default function Login() {
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [password, setPassword] = useState("");
+  const [status, setStatus] = useState<"idle" | "signing" | "error">("idle");
+  const [errMsg, setErrMsg] = useState("");
   const supabase = createBrowserClient();
 
-  async function sendLink() {
-    if (!email) return;
-    setStatus("sending");
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: typeof window !== "undefined" ? window.location.origin : undefined },
-    });
-    setStatus(error ? "error" : "sent");
+  async function signIn() {
+    if (!email || !password) return;
+    setStatus("signing");
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      setErrMsg(error.message || "Sign in failed.");
+      setStatus("error");
+    } else {
+      window.location.href = "/";
+    }
   }
 
   return (
@@ -28,13 +32,19 @@ export default function Login() {
           placeholder="you@email.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && sendLink()}
+          onKeyDown={(e) => e.key === "Enter" && signIn()}
         />
-        <button onClick={sendLink} disabled={status === "sending" || !email}>
-          {status === "sending" ? "sending…" : "send magic link"}
+        <input
+          type="password"
+          placeholder="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && signIn()}
+        />
+        <button onClick={signIn} disabled={status === "signing" || !email || !password}>
+          {status === "signing" ? "signing in…" : "sign in"}
         </button>
-        {status === "sent" && <div className="login-msg ok">Link sent. Check your inbox.</div>}
-        {status === "error" && <div className="login-msg err">Couldn&apos;t send. Check the email and try again.</div>}
+        {status === "error" && <div className="login-msg err">{errMsg}</div>}
       </div>
     </div>
   );
